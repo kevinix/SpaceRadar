@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Large data files
+*.ply
+*.pcd
+*.pdf
+*.jpg
+*.jpeg
+*.png
+uploads/
+outputs/
+
+# IDE
+.vscode/
+.idea/
+
+# Virtual env
+venv/
+.venv/
+
+# Reference files (not part of web app)
+input.cpp
+lslidar_driver.cpp
+lslidar_ros2_driver/
+test_lidar.py
+diagnose_lidar.py

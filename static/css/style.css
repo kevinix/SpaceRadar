@@ -1,0 +1,378 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+header {
+    background: #161b22;
+    padding: 12px 24px;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+}
+
+header h1 {
+    font-size: 20px;
+    color: #58a6ff;
+}
+
+header p {
+    font-size: 13px;
+    color: #8b949e;
+}
+
+main {
+    display: flex;
+    height: calc(100vh - 52px);
+}
+
+.sidebar {
+    width: 340px;
+    min-width: 340px;
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.panel {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.panel h2 {
+    font-size: 14px;
+    color: #58a6ff;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #21262d;
+}
+
+.viewport {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-bar {
+    display: flex;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+}
+
+.tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    color: #8b949e;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    color: #58a6ff;
+    border-bottom-color: #58a6ff;
+}
+
+.tab:hover {
+    color: #c9d1d9;
+}
+
+.viewer-container {
+    flex: 1;
+    background: #010409;
+    position: relative;
+}
+
+canvas {
+    display: block;
+}
+
+.status-bar {
+    background: #161b22;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: #8b949e;
+    border-top: 1px solid #30363d;
+}
+
+.upload-area {
+    border: 2px dashed #30363d;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upload-area:hover {
+    border-color: #58a6ff;
+    background: rgba(88, 166, 255, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #58a6ff;
+    background: rgba(88, 166, 255, 0.1);
+}
+
+.hint {
+    font-size: 11px;
+    color: #484f58;
+    margin-top: 6px;
+}
+
+.control-group {
+    margin-bottom: 10px;
+}
+
+.control-group label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #c9d1d9;
+}
+
+.control-group input[type="number"],
+.control-group select {
+    width: 100%;
+    padding: 6px 10px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    color: #c9d1d9;
+    font-size: 13px;
+}
+
+.control-group input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.sub-controls {
+    margin-left: 20px;
+    margin-bottom: 8px;
+}
+
+.sub-controls label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: #8b949e;
+}
+
+.sub-controls input[type="number"] {
+    width: 100px;
+    padding: 4px 8px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    color: #c9d1d9;
+    font-size: 12px;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: #238636;
+    color: #fff;
+    border-color: #2ea043;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2ea043;
+}
+
+.btn-success {
+    background: #1f6feb;
+    color: #fff;
+    border-color: #388bfd;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #388bfd;
+}
+
+.btn-download {
+    background: #da3633;
+    color: #fff;
+    border-color: #f85149;
+    margin-top: 8px;
+}
+
+.btn-download:hover {
+    background: #f85149;
+}
+
+.info-box {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid #1f6feb;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #58a6ff;
+    line-height: 1.6;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(1, 4, 9, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #30363d;
+    border-top: 3px solid #58a6ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    margin-top: 16px;
+    color: #58a6ff;
+    font-size: 14px;
+}
+
+.control-group input[type="text"] {
+    width: 100%;
+    padding: 6px 10px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    color: #c9d1d9;
+    font-size: 13px;
+}
+
+.control-group input[type="text"]:focus,
+.control-group input[type="number"]:focus {
+    outline: none;
+    border-color: #58a6ff;
+}
+
+.validation-msg {
+    display: block;
+    font-size: 11px;
+    color: #f85149;
+    margin-top: 2px;
+    min-height: 14px;
+}
+
+.lidar-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.lidar-actions .btn {
+    flex: 1;
+}
+
+.btn-capture {
+    background: #1f6feb;
+    color: #fff;
+    border-color: #388bfd;
+}
+
+.btn-capture:hover:not(:disabled) {
+    background: #388bfd;
+}
+
+.btn-capture.capturing {
+    background: #da3633;
+    border-color: #f85149;
+    animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+.btn-capture.capturing:hover:not(:disabled) {
+    background: #f85149;
+}
+
+.btn-small {
+    padding: 4px 10px;
+    font-size: 12px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.btn-small:hover {
+    background: #30363d;
+}
+
+@keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.error-box {
+    background: rgba(248, 81, 73, 0.1) !important;
+    border-color: #f85149 !important;
+    color: #f85149 !important;
+}
+
+.success-box {
+    background: rgba(35, 134, 54, 0.1) !important;
+    border-color: #2ea043 !important;
+    color: #2ea043 !important;
+}
+
+.status-line {
+    display: inline-block;
+    margin-right: 12px;
+    font-size: 12px;
+}
+
+.status-line::before {
+    content: '●';
+    margin-right: 4px;
+    font-size: 8px;
+}

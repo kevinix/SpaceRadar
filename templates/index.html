@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceDisplay - 点云处理与3D模型生成</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>SpaceDisplay</h1>
+        <p>点云数据处理与3D模型生成平台</p>
+    </header>
+
+    <main>
+        <aside class="sidebar">
+            <section class="panel">
+                <h2>雷达连接</h2>
+                <div class="control-group">
+                    <label>雷达型号:
+                        <select id="radarType">
+                            <option value="c16">镭神 C16</option>
+                            <option value="ms200p">奥锐达 MS200P</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- C16 UDP 连接界面 -->
+                <div id="c16Panel">
+                    <div class="control-group">
+                        <label>雷达IP地址</label>
+                        <input type="text" id="lidarIp" value="192.168.99.14" placeholder="例: 192.168.99.14">
+                        <span class="validation-msg" id="ipError"></span>
+                    </div>
+                    <div class="control-group">
+                        <label>数据端口 (MSOP)</label>
+                        <input type="number" id="lidarDataPort" value="2004" min="0" max="65535" placeholder="0-65535">
+                        <span class="validation-msg" id="dataPortError"></span>
+                    </div>
+                    <div class="control-group">
+                        <label>设备端口 (DIFOP)</label>
+                        <input type="number" id="lidarDevPort" value="2364" min="0" max="65535" placeholder="0-65535">
+                        <span class="validation-msg" id="devPortError"></span>
+                    </div>
+                    <div class="lidar-actions">
+                        <button id="btnCapture" class="btn btn-capture">捕获</button>
+                        <button id="btnUseData" class="btn btn-primary" disabled style="display:none;">使用当前帧</button>
+                        <button id="btnExportPC" class="btn btn-success" disabled style="display:none;">导出点云</button>
+                    </div>
+                    <div id="lidarStatus" class="info-box" style="display:none;"></div>
+                </div>
+
+                <!-- MS200P 串口连接界面 -->
+                <div id="ms200pPanel" style="display:none;">
+                    <div class="control-group">
+                        <label>串口设备:
+                            <select id="ms200pPort">
+                                <option value="">-- 请先刷新串口列表 --</option>
+                            </select>
+                        </label>
+                        <button id="btnRefreshPorts" class="btn btn-small">刷新</button>
+                    </div>
+                    <div class="control-group">
+                        <label>波特率:
+                            <select id="ms200pBaud">
+                                <option value="230400" selected>230400</option>
+                                <option value="115200">115200</option>
+                                <option value="460800">460800</option>
+                                <option value="921600">921600</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label>采集间隔:
+                            <select id="ms200pInterval">
+                                <option value="0.1" selected>0.1s (密集)</option>
+                                <option value="0.5">0.5s (标准)</option>
+                                <option value="1.0">1.0s (稀疏)</option>
+                            </select>
+                        </label>
+                        <span class="hint">控制数据累积频率，越密集点数越多</span>
+                    </div>
+                    <div class="control-group">
+                        <label><input type="checkbox" id="chkMS200PMinDist"> 过滤近距离反射点</label>
+                        <div class="sub-controls" id="ms200pMinDistControls" style="display:none;">
+                            <label>最小距离(米): <input type="number" id="ms200pMinDist" value="0.3" min="0.05" max="5.0" step="0.05"></label>
+                        </div>
+                        <span class="hint">滤除雷达自身反射及近处地面杂波，建议 0.2-0.5m</span>
+                    </div>
+                    <div class="lidar-actions">
+                        <button id="btnMS200PCapture" class="btn btn-capture">捕获</button>
+                        <button id="btnMS200PUseData" class="btn btn-primary" disabled style="display:none;">使用当前帧</button>
+                        <button id="btnMS200PExport" class="btn btn-success" disabled style="display:none;">导出点云</button>
+                    </div>
+                    <div id="ms200pStatus" class="info-box" style="display:none;"></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>上传点云</h2>
+                <div class="upload-area" id="uploadArea">
+                    <p>拖拽文件到此处或点击上传</p>
+                    <p class="hint">支持 PLY, PCD, XYZ, XYZN, XYZRGB, PTS</p>
+                    <input type="file" id="fileInput" accept=".ply,.pcd,.xyz,.xyzn,.xyzrgb,.pts" hidden>
+                </div>
+                <div id="fileInfo" class="info-box" style="display:none;"></div>
+            </section>
+
+            <section class="panel">
+                <h2>2. 预处理</h2>
+                <div class="control-group">
+                    <label><input type="checkbox" id="chkDenoise" checked> 统计去噪</label>
+                    <div class="sub-controls">
+                        <label>邻居数: <input type="number" id="nbNeighbors" value="20" min="5"></label>
+                        <label>标准差比: <input type="number" id="stdRatio" value="2.0" min="0.1" step="0.1"></label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label><input type="checkbox" id="chkDownsample" checked> 体素下采样</label>
+                    <div class="sub-controls">
+                        <label>体素大小: <input type="number" id="voxelSize" value="0.02" min="0.001" step="0.001"></label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label><input type="checkbox" id="chkNormals" checked> 估计法线</label>
+                    <div class="sub-controls">
+                        <label>搜索半径: <input type="number" id="normalRadius" value="0.1" min="0.01" step="0.01"></label>
+                    </div>
+                </div>
+                <button id="btnPreprocess" class="btn btn-primary" disabled>执行预处理</button>
+                <div id="preprocessInfo" class="info-box" style="display:none;"></div>
+            </section>
+
+            <section class="panel">
+                <h2>空间模型</h2>
+                <p class="hint">从点云数据提取房间外框架房型图</p>
+                <div class="control-group">
+                    <label>最小墙面距离(米): <input type="number" id="spatialMinDist" value="1.0" min="0.1" max="20" step="0.1"></label>
+                    <span class="hint">小于此距离的点视为杂物被丢弃</span>
+                </div>
+                <div class="control-group">
+                    <label>栅格精度(米): <input type="number" id="spatialGridSize" value="0.08" min="0.03" max="0.3" step="0.01"></label>
+                    <span class="hint">越小越精细，建议 0.05-0.15</span>
+                </div>
+                <div class="control-group">
+                    <label>墙面检测阈值(米): <input type="number" id="spatialRansacTh" value="0.12" min="0.05" max="0.5" step="0.01"></label>
+                    <span class="hint">RANSAC拟合精度，越小墙面越精确</span>
+                </div>
+                <div class="control-group">
+                    <label>高度层数: <input type="number" id="spatialLayers" value="15" min="3" max="60"></label>
+                    <span class="hint">垂直拉伸分层数量</span>
+                </div>
+                <button id="btnSpatialModel" class="btn btn-primary" disabled>生成空间模型</button>
+                <div id="spatialModelInfo" class="info-box" style="display:none;"></div>
+            </section>
+
+            <section class="panel">
+                <h2>3. 三维重建</h2>
+                <div class="control-group">
+                    <label>重建算法:
+                        <select id="reconMethod">
+                            <option value="poisson">泊松表面重建</option>
+                            <option value="alpha">Alpha Shapes</option>
+                            <option value="ball_pivoting">Ball Pivoting</option>
+                        </select>
+                    </label>
+                </div>
+                <div id="poissonParams" class="sub-controls">
+                    <label>八叉树深度: <input type="number" id="poissonDepth" value="9" min="2" max="14"></label>
+                </div>
+                <div id="alphaParams" class="sub-controls" style="display:none;">
+                    <label>Alpha 值: <input type="number" id="alphaValue" value="0.5" min="0.01" step="0.01"></label>
+                </div>
+                <div id="bpParams" class="sub-controls" style="display:none;">
+                    <p class="hint">Ball Pivoting 将自动计算球半径</p>
+                </div>
+                <div class="control-group">
+                    <label><input type="checkbox" id="chkSmooth"> 平滑处理</label>
+                    <label>迭代次数: <input type="number" id="smoothIter" value="10" min="1"></label>
+                </div>
+                <button id="btnReconstruct" class="btn btn-primary" disabled>执行重建</button>
+                <div id="reconInfo" class="info-box" style="display:none;"></div>
+            </section>
+
+            <section class="panel">
+                <h2>4. 导出模型</h2>
+                <div class="control-group">
+                    <label>模型格式:
+                        <select id="exportFormat">
+                            <option value="stl">STL</option>
+                            <option value="obj">OBJ</option>
+                            <option value="ply">PLY</option>
+                        </select>
+                    </label>
+                </div>
+                <button id="btnExport" class="btn btn-success" disabled>导出模型</button>
+                <a id="downloadLink" style="display:none;" class="btn btn-download">下载文件</a>
+            </section>
+        </aside>
+
+        <section class="viewport">
+            <div class="tab-bar">
+                <button class="tab" data-view="lidar">雷达实时</button>
+                <button class="tab active" data-view="pointcloud">点云视图</button>
+                <button class="tab" data-view="mesh">网格模型</button>
+                <button class="tab" data-view="frame">空间模型</button>
+            </div>
+            <div id="viewer" class="viewer-container"></div>
+            <div id="statusBar" class="status-bar">就绪</div>
+        </section>
+    </main>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="spinner"></div>
+        <p id="loadingText">处理中...</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
